@@ -53,7 +53,7 @@ var (
 
 const name = "usercluster-controller"
 
-// userclusterControllerData is the subet of the deploymentData interface
+// userclusterControllerData is the subset of the deploymentData interface
 // that is actually required by the usercluster deployment
 // This makes importing the the deployment elsewhere (openshift controller)
 // easier as only have to implement the parts that are actually in use.
