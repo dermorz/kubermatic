@@ -807,7 +807,14 @@ func TestImagePullSecretsWrapper(t *testing.T) {
 			inputObj:    &appsv1.StatefulSet{TypeMeta: metav1.TypeMeta{Kind: "StatefulSet", APIVersion: "apps/v1"}},
 			wantErr:     true,
 		},
+		{
+			name:            "DaemonSet is supported",
+			secretNames:     []string{"secret"},
+			inputObj:        &appsv1.DaemonSet{},
+			wantSecretNames: []string{"secret"},
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ImagePullSecretsWrapper(tt.secretNames...)
@@ -817,19 +824,27 @@ func TestImagePullSecretsWrapper(t *testing.T) {
 				t.Fatalf("wanted error = %v, but got %v", tt.wantErr, err)
 			}
 			if !tt.wantErr {
-				if d, ok := tt.inputObj.(*appsv1.Deployment); ok {
-					actualSecretNames := sets.NewString()
-					for _, ips := range d.Spec.Template.Spec.ImagePullSecrets {
-						actualSecretNames.Insert(ips.Name)
-					}
-					if len(d.Spec.Template.Spec.ImagePullSecrets) != len(tt.wantSecretNames) || !actualSecretNames.HasAll(tt.wantSecretNames...) {
-						t.Errorf("actual and expected image pull secret names do not match. expected: %v actual: %v", tt.wantSecretNames, actualSecretNames.List())
-					}
-				} else {
-					t.Fatal("this is an unexpected condition for this test that today only supports Deployments, if support for other resource types has been added please update this test accordingly")
+				switch o := tt.inputObj.(type) {
+				case *appsv1.Deployment:
+					assertIPS(t, &o.Spec.Template.Spec, tt.wantSecretNames)
+				case *appsv1.DaemonSet:
+					assertIPS(t, &o.Spec.Template.Spec, tt.wantSecretNames)
+				default:
+					t.Fatal("This is a bug in this test. If you hit this case you probably extended ImagePullSecretsWrapper and added a test case for a new resource type. You have to extend this switch statement as well to make this resource testable.")
 				}
 			}
 		})
+	}
+}
+
+func assertIPS(t *testing.T, podSpec *corev1.PodSpec, secretNames []string) {
+	t.Helper()
+	actualSecretNames := sets.NewString()
+	for _, ips := range podSpec.ImagePullSecrets {
+		actualSecretNames.Insert(ips.Name)
+	}
+	if len(podSpec.ImagePullSecrets) != len(secretNames) || !actualSecretNames.HasAll(secretNames...) {
+		t.Errorf("actual and expected image pull secret names do not match. expected: %v actual: %v", secretNames, actualSecretNames.List())
 	}
 }
 

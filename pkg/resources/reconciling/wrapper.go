@@ -46,9 +46,6 @@ func OwnerRefWrapper(ref metav1.OwnerReference) ObjectModifier {
 
 // ImagePullSecretsWrapper is generating a new ObjectModifier that wraps an ObjectCreator
 // and takes care of adding the secret names provided to the ImagePullSecrets.
-//
-// TODO At the moment only Deployments are supported, but
-// this can be extended to whatever Object carrying a PodSpec.
 func ImagePullSecretsWrapper(secretNames ...string) ObjectModifier {
 	return func(create ObjectCreator) ObjectCreator {
 		return func(existing ctrlruntimeclient.Object) (ctrlruntimeclient.Object, error) {
@@ -61,6 +58,9 @@ func ImagePullSecretsWrapper(secretNames ...string) ObjectModifier {
 			}
 			switch o := obj.(type) {
 			case *appsv1.Deployment:
+				configureImagePullSecrets(&o.Spec.Template.Spec, secretNames)
+				return o, nil
+			case *appsv1.DaemonSet:
 				configureImagePullSecrets(&o.Spec.Template.Spec, secretNames)
 				return o, nil
 			default:
