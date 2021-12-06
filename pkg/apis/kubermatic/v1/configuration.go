@@ -218,6 +218,8 @@ type KubermaticUserClusterConfiguration struct {
 	// used for user clusters (user cluster control plane + addons). This also applies to
 	// the KubermaticDockerRepository and DNATControllerDockerRepository fields.
 	OverwriteRegistry string `json:"overwriteRegistry,omitempty"`
+	// ImagePullSecret is used to authenticate against Docker registries.
+	ImagePullSecret string `json:"imagePullSecret,omitempty"`
 	// Addons controls the optional additions installed into each user cluster.
 	Addons KubermaticAddonsConfiguration `json:"addons,omitempty"`
 	// NodePortRange is the port range for customer clusters - this must match the NodePort

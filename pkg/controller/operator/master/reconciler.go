@@ -216,7 +216,7 @@ func (r *Reconciler) reconcileSecrets(ctx context.Context, config *kubermaticv1.
 	}
 
 	if config.Spec.ImagePullSecret != "" {
-		creators = append(creators, common.DockercfgSecretCreator(config))
+		creators = append(creators, common.DockercfgSecretCreator(config.Spec.ImagePullSecret, common.DockercfgSecretName))
 	}
 
 	if err := reconciling.ReconcileSecrets(ctx, creators, config.Namespace, r.Client, common.OwnershipModifierFactory(config, r.scheme)); err != nil {

@@ -469,7 +469,13 @@ func (r *Reconciler) reconcileSecrets(ctx context.Context, cfg *kubermaticv1.Kub
 	}
 
 	if cfg.Spec.ImagePullSecret != "" {
-		creators = append(creators, common.DockercfgSecretCreator(cfg))
+		creators = append(creators, common.DockercfgSecretCreator(cfg.Spec.ImagePullSecret, common.DockercfgSecretName))
+	}
+
+	// TODO(moritz): Later only create secret from config if no secret with
+	// that name already exists. The value from the config is only a fallback.
+	if cfg.Spec.UserCluster.ImagePullSecret != "" {
+		creators = append(creators, common.DockercfgSecretCreator(cfg.Spec.UserCluster.ImagePullSecret, common.UserClusterDockercfgSecretName))
 	}
 
 	if err := reconciling.ReconcileSecrets(ctx, creators, cfg.Namespace, client, common.OwnershipModifierFactory(seed, r.scheme)); err != nil {

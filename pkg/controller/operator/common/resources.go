@@ -36,7 +36,13 @@ const (
 	// ComponentLabel is the label of the component within the architecture.
 	ComponentLabel = "app.kubernetes.io/component"
 
+	// DockercfgSecretName is the name of the secret holding the
+	// imagePullSecret for KKP internal images.
 	DockercfgSecretName = "dockercfg"
+
+	// UserClusterDockercfgSecretName is the name of the secret holding the
+	// default imagePullSecret to be used in user clusters controllers.
+	UserClusterDockercfgSecretName = "usercluster-dockercfg"
 
 	WebhookServiceName        = "kubermatic-webhook"
 	WebhookRoleName           = "kubermatic-webhook"
@@ -82,13 +88,13 @@ func NamespaceCreator(cfg *kubermaticv1.KubermaticConfiguration) reconciling.Nam
 	}
 }
 
-func DockercfgSecretCreator(cfg *kubermaticv1.KubermaticConfiguration) reconciling.NamedSecretCreatorGetter {
+func DockercfgSecretCreator(imagePullSecret, secretName string) reconciling.NamedSecretCreatorGetter {
 	return func() (string, reconciling.SecretCreator) {
-		return DockercfgSecretName, func(s *corev1.Secret) (*corev1.Secret, error) {
+		return secretName, func(s *corev1.Secret) (*corev1.Secret, error) {
 			s.Type = corev1.SecretTypeDockerConfigJson
 
 			return createSecretData(s, map[string]string{
-				corev1.DockerConfigJsonKey: cfg.Spec.ImagePullSecret,
+				corev1.DockerConfigJsonKey: imagePullSecret,
 			}), nil
 		}
 	}

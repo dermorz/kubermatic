@@ -466,6 +466,10 @@ spec:
                     description: EtcdVolumeSize configures the volume size to use
                       for each etcd pod inside user clusters.
                     type: string
+                  imagePullSecret:
+                    description: ImagePullSecret is used to authenticate against Docker
+                      registries.
+                    type: string
                   kubermaticDockerRepository:
                     description: KubermaticDockerRepository is the repository containing
                       the Kubermatic user-cluster-controller-manager image.
