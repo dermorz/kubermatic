@@ -79,7 +79,7 @@ func (r *reconciler) reconcile(ctx context.Context) error {
 	}
 	seedDockercfg, err := r.seedDockercfg(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get seedDockercfg: %v", err)
+		return fmt.Errorf("failed to get seedDockercfg: %w", err)
 	}
 	cloudConfig, err := r.cloudConfig(ctx, resources.CloudConfigConfigMapName)
 	if err != nil {
