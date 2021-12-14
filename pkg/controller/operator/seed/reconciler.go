@@ -462,7 +462,6 @@ func (r *Reconciler) reconcileConfigMaps(ctx context.Context, cfg *kubermaticv1.
 
 func (r *Reconciler) reconcileSecrets(ctx context.Context, cfg *kubermaticv1.KubermaticConfiguration, seed *kubermaticv1.Seed, client ctrlruntimeclient.Client, log *zap.SugaredLogger) error {
 	log.Debug("reconciling Secrets")
-	log.Debug("Hello me!")
 
 	creators := []reconciling.NamedSecretCreatorGetter{
 		common.WebhookServingCASecretCreator(cfg),
@@ -473,9 +472,6 @@ func (r *Reconciler) reconcileSecrets(ctx context.Context, cfg *kubermaticv1.Kub
 		creators = append(creators, common.DockercfgSecretCreator(cfg.Spec.ImagePullSecret, common.DockercfgSecretName))
 	}
 
-	// TODO(moritz): Later only create secret from config if no secret with
-	// that name already exists. The value from the config is only a fallback.
-	log.Debugf("cfg.Spec.UserCluster.ImagePullSecret: %q", cfg.Spec.UserCluster.ImagePullSecret)
 	if cfg.Spec.UserCluster.ImagePullSecret != "" {
 		creators = append(creators, common.DockercfgSecretCreator(cfg.Spec.UserCluster.ImagePullSecret, common.UserClusterDockercfgSecretName))
 	}
