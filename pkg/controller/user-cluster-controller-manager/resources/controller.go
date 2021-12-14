@@ -30,6 +30,7 @@ import (
 	"go.uber.org/zap"
 
 	kubermaticv1 "k8c.io/kubermatic/v2/pkg/apis/kubermatic/v1"
+	"k8c.io/kubermatic/v2/pkg/controller/operator/common"
 	userclustercontrollermanager "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager"
 	"k8c.io/kubermatic/v2/pkg/resources"
 	"k8c.io/kubermatic/v2/pkg/resources/certificates/triple"
@@ -356,6 +357,21 @@ func (r *reconciler) userSSHKeys(ctx context.Context) (map[string][]byte, error)
 		return nil, err
 	}
 	return secret.Data, nil
+}
+
+func (r *reconciler) seedDockercfg(ctx context.Context) (*corev1.Secret, error) {
+	secret := &corev1.Secret{}
+	if err := r.seedClient.Get(
+		ctx,
+		types.NamespacedName{Namespace: r.namespace, Name: common.UserClusterDockercfgSecretName},
+		secret,
+	); err != nil {
+		if kerrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return secret, nil
 }
 
 func (r *reconciler) cloudConfig(ctx context.Context, cloudConfigConfigmapName string) ([]byte, error) {

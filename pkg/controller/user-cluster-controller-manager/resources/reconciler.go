@@ -25,6 +25,7 @@ import (
 
 	kubermaticv1 "k8c.io/kubermatic/v2/pkg/apis/kubermatic/v1"
 	"k8c.io/kubermatic/v2/pkg/apis/kubermatic/v1/helper"
+	"k8c.io/kubermatic/v2/pkg/controller/operator/common"
 	"k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/cloudcontroller"
 	cabundle "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/ca-bundle"
 	"k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/cloudinitsettings"
@@ -33,6 +34,7 @@ import (
 	coredns "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/core-dns"
 	csimigration "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/csi-migration"
 	dnatcontroller "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/dnat-controller"
+	"k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/dockercfg"
 	envoyagent "k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/envoy-agent"
 	"k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/gatekeeper"
 	"k8c.io/kubermatic/v2/pkg/controller/user-cluster-controller-manager/resources/resources/konnectivity"
@@ -75,16 +77,21 @@ func (r *reconciler) reconcile(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to get userSSHKeys: %w", err)
 	}
+	seedDockercfg, err := r.seedDockercfg(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get seedDockercfg: %v", err)
+	}
 	cloudConfig, err := r.cloudConfig(ctx, resources.CloudConfigConfigMapName)
 	if err != nil {
 		return fmt.Errorf("failed to get cloudConfig: %w", err)
 	}
 
 	data := reconcileData{
-		caCert:       caCert,
-		userSSHKeys:  userSSHKeys,
-		cloudConfig:  cloudConfig,
-		ccmMigration: r.ccmMigration || r.ccmMigrationCompleted,
+		caCert:        caCert,
+		userSSHKeys:   userSSHKeys,
+		cloudConfig:   cloudConfig,
+		ccmMigration:  r.ccmMigration || r.ccmMigrationCompleted,
+		seedDockercfg: seedDockercfg,
 	}
 
 	if r.cloudProvider == kubermaticv1.VSphereCloudProvider {
@@ -145,6 +152,10 @@ func (r *reconciler) reconcile(ctx context.Context) error {
 		return err
 	}
 
+	if err := r.reconcileSecrets(ctx, data); err != nil {
+		return err
+	}
+
 	if err := r.reconcileDeployments(ctx, data); err != nil {
 		return err
 	}
@@ -174,10 +185,6 @@ func (r *reconciler) reconcile(ctx context.Context) error {
 	}
 
 	if err := r.reconcileConfigMaps(ctx, data); err != nil {
-		return err
-	}
-
-	if err := r.reconcileSecrets(ctx, data); err != nil {
 		return err
 	}
 
@@ -740,6 +747,11 @@ func (r *reconciler) reconcileSecrets(ctx context.Context, data reconcileData) e
 	creators := []reconciling.NamedSecretCreatorGetter{
 		cloudcontroller.CloudConfig(data.cloudConfig, resources.CloudConfigSecretName),
 	}
+
+	if data.seedDockercfg != nil {
+		creators = append(creators, dockercfg.SecretCreator(data.seedDockercfg))
+	}
+
 	if !r.isKonnectivityEnabled {
 		creators = append(creators, openvpn.ClientCertificate(data.openVPNCACert))
 	} else {
@@ -831,7 +843,13 @@ func (r *reconciler) reconcileDaemonSet(ctx context.Context, data reconcileData)
 		dsCreators = append(dsCreators, envoyagent.DaemonSetCreator(r.tunnelingAgentIP, r.versions, configHash, r.overwriteRegistryFunc))
 	}
 
-	if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, metav1.NamespaceSystem, r.Client); err != nil {
+	var modifiers []reconciling.ObjectModifier
+
+	if data.seedDockercfg != nil {
+		modifiers = append(modifiers, reconciling.ImagePullSecretsWrapper(common.UserClusterDockercfgSecretName))
+	}
+
+	if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, metav1.NamespaceSystem, r.Client, modifiers...); err != nil {
 		return fmt.Errorf("failed to reconcile the DaemonSet: %w", err)
 	}
 
@@ -839,7 +857,7 @@ func (r *reconciler) reconcileDaemonSet(ctx context.Context, data reconcileData)
 		dsCreators = []reconciling.NamedDaemonSetCreatorGetter{
 			promtail.DaemonSetCreator(data.loggingRequirements, r.overwriteRegistryFunc),
 		}
-		if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, resources.UserClusterMLANamespace, r.Client); err != nil {
+		if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, resources.UserClusterMLANamespace, r.Client, modifiers...); err != nil {
 			return fmt.Errorf("failed to reconcile the DaemonSet: %w", err)
 		}
 	}
@@ -887,7 +905,14 @@ func (r *reconciler) reconcileDeployments(ctx context.Context, data reconcileDat
 	creators := []reconciling.NamedDeploymentCreatorGetter{
 		kubernetesdashboard.DeploymentCreator(r.overwriteRegistryFunc),
 	}
-	if err := reconciling.ReconcileDeployments(ctx, creators, kubernetesdashboard.Namespace, r.Client); err != nil {
+
+	var modifiers []reconciling.ObjectModifier
+
+	if data.seedDockercfg != nil {
+		modifiers = append(modifiers, reconciling.ImagePullSecretsWrapper(common.UserClusterDockercfgSecretName))
+	}
+
+	if err := reconciling.ReconcileDeployments(ctx, creators, kubernetesdashboard.Namespace, r.Client, modifiers...); err != nil {
 		return fmt.Errorf("failed to reconcile Deployments in namespace %s: %w", kubernetesdashboard.Namespace, err)
 	}
 
@@ -895,7 +920,7 @@ func (r *reconciler) reconcileDeployments(ctx context.Context, data reconcileDat
 		coredns.DeploymentCreator(r.clusterSemVer, r.overwriteRegistryFunc),
 	}
 
-	if err := reconciling.ReconcileDeployments(ctx, kubeSystemCreators, metav1.NamespaceSystem, r.Client); err != nil {
+	if err := reconciling.ReconcileDeployments(ctx, kubeSystemCreators, metav1.NamespaceSystem, r.Client, modifiers...); err != nil {
 		return fmt.Errorf("failed to reconcile Deployments in namespace %s: %w", metav1.NamespaceSystem, err)
 	}
 
@@ -906,7 +931,7 @@ func (r *reconciler) reconcileDeployments(ctx context.Context, data reconcileDat
 			gatekeeper.AuditDeploymentCreator(r.overwriteRegistryFunc, data.gatekeeperAuditRequirements),
 		}
 
-		if err := reconciling.ReconcileDeployments(ctx, creators, resources.GatekeeperNamespace, r.Client); err != nil {
+		if err := reconciling.ReconcileDeployments(ctx, creators, resources.GatekeeperNamespace, r.Client, modifiers...); err != nil {
 			return fmt.Errorf("failed to reconcile Deployments in namespace %s: %w", resources.GatekeeperNamespace, err)
 		}
 	}
@@ -915,7 +940,7 @@ func (r *reconciler) reconcileDeployments(ctx context.Context, data reconcileDat
 		creators := []reconciling.NamedDeploymentCreatorGetter{
 			userclusterprometheus.DeploymentCreator(data.monitoringRequirements, data.monitoringReplicas, r.overwriteRegistryFunc),
 		}
-		if err := reconciling.ReconcileDeployments(ctx, creators, resources.UserClusterMLANamespace, r.Client); err != nil {
+		if err := reconciling.ReconcileDeployments(ctx, creators, resources.UserClusterMLANamespace, r.Client, modifiers...); err != nil {
 			return fmt.Errorf("failed to reconcile Deployments in namespace %s: %w", resources.UserClusterMLANamespace, err)
 		}
 	}
@@ -925,7 +950,7 @@ func (r *reconciler) reconcileDeployments(ctx context.Context, data reconcileDat
 			konnectivity.DeploymentCreator(r.konnectivityServerHost, r.konnectivityServerPort, r.overwriteRegistryFunc),
 			metricsserver.DeploymentCreator(r.overwriteRegistryFunc), // deploy metrics-server in user cluster
 		}
-		if err := reconciling.ReconcileDeployments(ctx, creators, metav1.NamespaceSystem, r.Client); err != nil {
+		if err := reconciling.ReconcileDeployments(ctx, creators, metav1.NamespaceSystem, r.Client, modifiers...); err != nil {
 			return fmt.Errorf("failed to reconcile Deployments in namespace %s: %w", metav1.NamespaceSystem, err)
 		}
 	}
@@ -996,6 +1021,7 @@ type reconcileData struct {
 	monitoringReplicas          *int32
 	clusterAddress              *kubermaticv1.ClusterAddress
 	k8sServiceApiIP             *net.IP
+	seedDockercfg               *corev1.Secret
 }
 
 func (r *reconciler) ensureOPAIntegrationIsRemoved(ctx context.Context) error {
