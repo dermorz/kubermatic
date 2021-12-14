@@ -825,14 +825,14 @@ func (r *reconciler) reconcileSecrets(ctx context.Context, data reconcileData) e
 }
 
 func (r *reconciler) reconcileDaemonSet(ctx context.Context, data reconcileData) error {
-	var dsCreators []reconciling.NamedDaemonSetCreatorGetter
+	var creators []reconciling.NamedDaemonSetCreatorGetter
 
 	if r.nodeLocalDNSCache {
-		dsCreators = append(dsCreators, nodelocaldns.DaemonSetCreator(r.overwriteRegistryFunc))
+		creators = append(creators, nodelocaldns.DaemonSetCreator(r.overwriteRegistryFunc))
 	}
 
 	if r.userSSHKeyAgent {
-		dsCreators = append(dsCreators, usersshkeys.DaemonSetCreator(r.versions, r.overwriteRegistryFunc))
+		creators = append(creators, usersshkeys.DaemonSetCreator(r.versions, r.overwriteRegistryFunc))
 	}
 
 	if len(r.tunnelingAgentIP) > 0 {
@@ -840,7 +840,7 @@ func (r *reconciler) reconcileDaemonSet(ctx context.Context, data reconcileData)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve envoy-agent config hash: %w", err)
 		}
-		dsCreators = append(dsCreators, envoyagent.DaemonSetCreator(r.tunnelingAgentIP, r.versions, configHash, r.overwriteRegistryFunc))
+		creators = append(creators, envoyagent.DaemonSetCreator(r.tunnelingAgentIP, r.versions, configHash, r.overwriteRegistryFunc))
 	}
 
 	var modifiers []reconciling.ObjectModifier
@@ -849,15 +849,15 @@ func (r *reconciler) reconcileDaemonSet(ctx context.Context, data reconcileData)
 		modifiers = append(modifiers, reconciling.ImagePullSecretsWrapper(common.UserClusterDockercfgSecretName))
 	}
 
-	if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, metav1.NamespaceSystem, r.Client, modifiers...); err != nil {
+	if err := reconciling.ReconcileDaemonSets(ctx, creators, metav1.NamespaceSystem, r.Client, modifiers...); err != nil {
 		return fmt.Errorf("failed to reconcile the DaemonSet: %w", err)
 	}
 
 	if r.userClusterMLA.Logging {
-		dsCreators = []reconciling.NamedDaemonSetCreatorGetter{
+		creators = []reconciling.NamedDaemonSetCreatorGetter{
 			promtail.DaemonSetCreator(data.loggingRequirements, r.overwriteRegistryFunc),
 		}
-		if err := reconciling.ReconcileDaemonSets(ctx, dsCreators, resources.UserClusterMLANamespace, r.Client, modifiers...); err != nil {
+		if err := reconciling.ReconcileDaemonSets(ctx, creators, resources.UserClusterMLANamespace, r.Client, modifiers...); err != nil {
 			return fmt.Errorf("failed to reconcile the DaemonSet: %w", err)
 		}
 	}
