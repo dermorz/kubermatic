@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// SecretCreator returns a function to create a secret in the usercluster that can be used as imagePullSecret.
 func SecretCreator(seedDockercfg *corev1.Secret) reconciling.NamedSecretCreatorGetter {
 	return func() (string, reconciling.SecretCreator) {
 		return common.UserClusterDockercfgSecretName, func(existing *corev1.Secret) (*corev1.Secret, error) {
