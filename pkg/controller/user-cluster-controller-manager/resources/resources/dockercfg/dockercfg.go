@@ -29,7 +29,6 @@ func SecretCreator(seedDockercfg *corev1.Secret) reconciling.NamedSecretCreatorG
 		return common.UserClusterDockercfgSecretName, func(existing *corev1.Secret) (*corev1.Secret, error) {
 			existing.Name = common.UserClusterDockercfgSecretName
 			existing.Data = seedDockercfg.Data
-			// foo
 			existing.Type = corev1.SecretTypeDockerConfigJson
 
 			return existing, nil
