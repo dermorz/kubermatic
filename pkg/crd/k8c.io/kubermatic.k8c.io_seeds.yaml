@@ -418,6 +418,9 @@ spec:
                             that *if* a resource at a cloud provider is removed/changed
                             outside of KKP, it will take this long to fix it.
                           type: string
+                        proxmox:
+                          description: Proxmox is experimental and unsupported
+                          type: object
                         requiredEmails:
                           description: 'Optional: When defined, only users with an
                             e-mail address on the given domains can make use of this

@@ -386,6 +386,8 @@ type DatacenterSpec struct {
 	Anexia              *DatacenterSpecAnexia              `json:"anexia,omitempty"`
 	// Nutanix is experimental and unsupported
 	Nutanix *DatacenterSpecNutanix `json:"nutanix,omitempty"`
+	// Proxmox is experimental and unsupported
+	Proxmox *DatacenterSpecProxmox `json:"proxmox,omitempty"`
 
 	//nolint:staticcheck
 	//lint:ignore SA5008 omitgenyaml is used by the example-yaml-generator
@@ -599,6 +601,10 @@ type DatacenterSpecNutanix struct {
 	AllowInsecure bool `json:"allowInsecure,omitempty"`
 	// Images to use for each supported operating system
 	Images ImageList `json:"images"`
+}
+
+// DatacenterSpecProxmox describes a Proxmox datacenter.
+type DatacenterSpecProxmox struct {
 }
 
 // DatacenterSpecAlibaba describes a alibaba datacenter.
