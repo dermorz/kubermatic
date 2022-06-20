@@ -358,6 +358,15 @@ func GetAPIV2NodeCloudSpec(machineSpec clusterv1alpha1.MachineSpec) (*apiv1.Node
 				DiskSize:       config.DiskSize,
 			}
 		}
+	// TODO(moritz): Add proxmox support in machine-controller
+	// case providerconfig.CloudProviderProxmox:
+	// 	{
+	// 		config := &nutanix.RawConfig{}
+	// 		if err := json.Unmarshal(decodedProviderSpec.CloudProviderSpec.Raw, &config); err != nil {
+	// 			return nil, fmt.Errorf("failed to parse nutanix config: %w", err)
+	// 		}
+	// 		cloudSpec.Proxmox = &apiv1.ProxmoxNodeSpec{}
+	// 	}
 	default:
 		return nil, fmt.Errorf("unknown cloud provider %q", decodedProviderSpec.CloudProvider)
 	}

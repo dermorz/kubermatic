@@ -45,6 +45,7 @@ var providerNames = []string{
 	"alibaba",
 	"anexia",
 	"nutanix",
+	"proxmox",
 	"vmware-cloud-director",
 }
 
@@ -87,19 +88,20 @@ func CredentialEndpoint(presetProvider provider.PresetProvider, userInfoGetter p
 		for _, preset := range presets {
 			// get specific provider by name from the Preset spec struct:
 			// type PresetSpec struct {
-			//	Digitalocean		Digitalocean
-			//	Hetzner      		Hetzner
-			//	Azure        		Azure
-			//	VSphere      		VSphere
-			//	AWS          		AWS
-			//	Openstack    		Openstack
-			//	Packet       		Packet
-			//	GCP          		GCP
-			//	Kubevirt     		Kubevirt
-			//	Alibaba      		Alibaba
-			//  Anexia       		Anexia
-			//  Nutanix      		Nutanix
-			//  VMwareCloudDirector VMwareCloudDirector
+			// 	Digitalocean        Digitalocean
+			// 	Hetzner             Hetzner
+			// 	Azure               Azure
+			// 	VSphere             VSphere
+			// 	AWS                 AWS
+			// 	Openstack           Openstack
+			// 	Packet              Packet
+			// 	GCP                 GCP
+			// 	Kubevirt            Kubevirt
+			// 	Alibaba             Alibaba
+			// 	Anexia              Anexia
+			// 	Nutanix             Nutanix
+			// 	Proxmox             Proxmox
+			// 	VMwareCloudDirector VMwareCloudDirector
 			// }
 			providersRaw := reflect.ValueOf(preset.Spec)
 			if providersRaw.Kind() == reflect.Struct {

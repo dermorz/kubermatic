@@ -59,6 +59,7 @@ type PresetSpec struct {
 	Alibaba             *Alibaba             `json:"alibaba,omitempty"`
 	Anexia              *Anexia              `json:"anexia,omitempty"`
 	Nutanix             *Nutanix             `json:"nutanix,omitempty"`
+	Proxmox             *Proxmox             `json:"proxmox,omitempty"`
 	VMwareCloudDirector *VMwareCloudDirector `json:"vmwareCloudDirector,omitempty"`
 	GKE                 *GKE                 `json:"gke,omitempty"`
 	EKS                 *EKS                 `json:"eks,omitempty"`
@@ -336,6 +337,21 @@ type Nutanix struct {
 }
 
 func (s Nutanix) IsValid() bool {
+	return len(s.Username) > 0 && len(s.Password) > 0
+}
+
+type Proxmox struct {
+	ProviderPreset `json:",inline"`
+
+	// ProxyURL is used to optionally configure a HTTP proxy to access the Proxmox VE API.
+	ProxyURL string `json:"proxyURL,omitempty"`
+	// Username is the username to access the Proxmox VE API.
+	Username string `json:"username"`
+	// Password is the password corresponding to the provided user.
+	Password string `json:"password"`
+}
+
+func (s Proxmox) IsValid() bool {
 	return len(s.Username) > 0 && len(s.Password) > 0
 }
 

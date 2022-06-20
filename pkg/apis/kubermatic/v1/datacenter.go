@@ -51,6 +51,7 @@ const (
 	NutanixCloudProvider             ProviderType = "nutanix"
 	OpenstackCloudProvider           ProviderType = "openstack"
 	PacketCloudProvider              ProviderType = "packet"
+	ProxmoxCloudProvider             ProviderType = "proxmox"
 	VMwareCloudDirectorCloudProvider ProviderType = "vmware-cloud-director"
 	VSphereCloudProvider             ProviderType = "vsphere"
 
@@ -78,6 +79,7 @@ var (
 		NutanixCloudProvider,
 		OpenstackCloudProvider,
 		PacketCloudProvider,
+		ProxmoxCloudProvider,
 		VMwareCloudDirectorCloudProvider,
 		VSphereCloudProvider,
 	}
@@ -605,6 +607,11 @@ type DatacenterSpecNutanix struct {
 
 // DatacenterSpecProxmox describes a Proxmox datacenter.
 type DatacenterSpecProxmox struct {
+	// Endoint to use for accessing Proxmox API. Example: https://proxmox.example.com:8006/api2/json
+	Endpoint string `json:"endpoint"`
+
+	// Optional: AllowInsecure allows to disable the TLS certificate check against the endpoint (defaults to false)
+	AllowInsecure bool `json:"allowInsecure,omitempty"`
 }
 
 // DatacenterSpecAlibaba describes a alibaba datacenter.

@@ -911,6 +911,7 @@ type CloudSpec struct {
 	Alibaba             *AlibabaCloudSpec             `json:"alibaba,omitempty"`
 	Anexia              *AnexiaCloudSpec              `json:"anexia,omitempty"`
 	Nutanix             *NutanixCloudSpec             `json:"nutanix,omitempty"`
+	Proxmox             *ProxmoxCloudSpec             `json:"proxmox,omitempty"`
 	VMwareCloudDirector *VMwareCloudDirectorCloudSpec `json:"vmwareCloudDirector,omitempty"`
 }
 
@@ -1273,6 +1274,15 @@ type NutanixCloudSpec struct {
 	CSI *NutanixCSIConfig `json:"csi,omitempty"`
 }
 
+// ProxmoxCloudSpec specifies the access data to Proxmox.
+type ProxmoxCloudSpec struct {
+	CredentialsReference *providerconfig.GlobalSecretKeySelector `json:"credentialsReference,omitempty"`
+
+	ProxyURL string `json:"proxyURL,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
 // +kubebuilder:validation:Enum=HealthStatusDown;HealthStatusUp;HealthStatusProvisioning
 
 type HealthStatus string
@@ -1406,6 +1416,9 @@ func (cluster *Cluster) GetSecretName() string {
 	}
 	if cluster.Spec.Cloud.Nutanix != nil {
 		return fmt.Sprintf("%s-nutanix-%s", CredentialPrefix, cluster.Name)
+	}
+	if cluster.Spec.Cloud.Proxmox != nil {
+		return fmt.Sprintf("%s-proxmox-%s", CredentialPrefix, cluster.Name)
 	}
 	if cluster.Spec.Cloud.VMwareCloudDirector != nil {
 		return fmt.Sprintf("%s-vmware-cloud-director-%s", CredentialPrefix, cluster.Name)

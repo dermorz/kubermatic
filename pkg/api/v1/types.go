@@ -81,6 +81,7 @@ type DatacenterSpec struct {
 	Alibaba             *kubermaticv1.DatacenterSpecAlibaba             `json:"alibaba,omitempty"`
 	Anexia              *kubermaticv1.DatacenterSpecAnexia              `json:"anexia,omitempty"`
 	Nutanix             *kubermaticv1.DatacenterSpecNutanix             `json:"nutanix,omitempty"`
+	Proxmox             *kubermaticv1.DatacenterSpecProxmox             `json:"proxmox,omitempty"`
 	VMwareCloudDirector *kubermaticv1.DatacenterSpecVMwareCloudDirector `json:"vmwareCloudDirector,omitempty"`
 
 	//nolint:staticcheck
@@ -987,6 +988,7 @@ func (cs *ClusterSpec) MarshalJSON() ([]byte, error) {
 			Alibaba:             newPublicAlibabaCloudSpec(cs.Cloud.Alibaba),
 			Anexia:              newPublicAnexiaCloudSpec(cs.Cloud.Anexia),
 			Nutanix:             newPublicNutanixCloudSpec(cs.Cloud.Nutanix),
+			Proxmox:             newPublicProxmoxCloudSpec(cs.Cloud.Proxmox),
 			VMwareCloudDirector: newPublicVMwareCloudDirectorCloudSpec(cs.Cloud.VMwareCloudDirector),
 		},
 		Version:                              cs.Version,
@@ -1211,6 +1213,17 @@ func newPublicNutanixCloudSpec(internal *kubermaticv1.NutanixCloudSpec) (public 
 	return &PublicNutanixCloudSpec{}
 }
 
+// PublicProxmoxCloudSpec is a public counterpart of apiv1.ProxmoxCloudSpec.
+type PublicProxmoxCloudSpec struct{}
+
+func newPublicProxmoxCloudSpec(internal *kubermaticv1.ProxmoxCloudSpec) (public *PublicProxmoxCloudSpec) {
+	if internal == nil {
+		return nil
+	}
+
+	return &PublicProxmoxCloudSpec{}
+}
+
 // PublicVMwareCloudDirectorCloudSpec is a public counterpart of apiv1.VMwareCloudDirectorCloudSpec.
 type PublicVMwareCloudDirectorCloudSpec struct{}
 
@@ -1322,6 +1335,7 @@ type NodeCloudSpec struct {
 	Alibaba             *AlibabaNodeSpec             `json:"alibaba,omitempty"`
 	Anexia              *AnexiaNodeSpec              `json:"anexia,omitempty"`
 	Nutanix             *NutanixNodeSpec             `json:"nutanix,omitempty"`
+	Proxmox             *ProxmoxNodeSpec             `json:"proxmox,omitempty"`
 	VMwareCloudDirector *VMwareCloudDirectorNodeSpec `json:"vmwareCloudDirector,omitempty"`
 }
 
@@ -2133,6 +2147,18 @@ func (spec *NutanixNodeSpec) MarshalJSON() ([]byte, error) {
 		MemoryMB:       spec.MemoryMB,
 		DiskSize:       spec.DiskSize,
 	}
+
+	return json.Marshal(&res)
+}
+
+// ProxmoxNodeSpec proxmox specific node settings
+// swagger:model ProxmoxNodeSpec
+type ProxmoxNodeSpec struct {
+}
+
+func (spec *ProxmoxNodeSpec) MarshalJSON() ([]byte, error) {
+	res := struct {
+	}{}
 
 	return json.Marshal(&res)
 }
