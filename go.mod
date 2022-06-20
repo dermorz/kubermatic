@@ -10,6 +10,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.4.0
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/Telmate/proxmox-api-go v0.0.0-20220605094644-df18575a84d9
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1588
 	github.com/aws/aws-sdk-go v1.44.10
 	github.com/aws/aws-sdk-go-v2/service/eks v1.20.7

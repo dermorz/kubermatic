@@ -294,6 +294,8 @@ github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrU
 github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
+github.com/Telmate/proxmox-api-go v0.0.0-20220605094644-df18575a84d9 h1:iu4+7XxumrN8tWP1t2PFRMYyTGkCS6Ttg/Y7RFsg8+I=
+github.com/Telmate/proxmox-api-go v0.0.0-20220605094644-df18575a84d9/go.mod h1:uHptTDYag2s4dJQWUYP4VczIeUPGGu3BNy4JGm9MSjg=
 github.com/Venafi/vcert/v4 v4.11.0/go.mod h1:OE+UZ0cj8qqVUuk0u7R4GIk4ZB6JMSf/WySqnBPNwws=
 github.com/Venafi/vcert/v4 v4.14.3/go.mod h1:IL+6LA8QRWZbmcMzIr/vRhf9Aa6XDM2cQO50caWevjA=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
